@@ -148,12 +148,12 @@ const apiRequest = async <T>(endpoint: string): Promise<T> => {
 
 // Image URL helpers
 export const getImageUrl = (path: string | null, size: string = 'w500'): string => {
-  if (!path) return '/placeholder-image.jpg'; // You'll need a placeholder image
+  if (!path) return 'placeholder-image.jpg'; // Relative to static folder where index.html is served
   return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
 };
 
 export const getBackdropUrl = (path: string | null, size: string = 'w1280'): string => {
-  if (!path) return '/placeholder-backdrop.jpg';
+  if (!path) return 'placeholder-image.jpg'; // Relative to static folder where index.html is served
   return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
 };
 
@@ -356,16 +356,34 @@ export const getPlayLinkWithFallback = async (
     const apiResponse = await getPlayLink(movieId, season, episode);
     
     if (apiResponse.success && apiResponse.data.play_link) {
-      return {
-        ...apiResponse,
-        data: {
-          ...apiResponse.data,
-          source: 'api'
+      // Check if the play_link is actually accessible
+      try {
+        const response = await fetch(apiResponse.data.play_link, { 
+          method: 'HEAD',
+          // Add timeout to prevent hanging
+          signal: AbortSignal.timeout(10000) // 10 second timeout
+        });
+        
+        if (response.ok) {
+          // play_link is accessible, return it
+          return {
+            ...apiResponse,
+            data: {
+              ...apiResponse.data,
+              source: 'api'
+            }
+          };
+        } else {
+          console.log(`play_link returned ${response.status}, proceeding to extraction`);
+          // fall through to extraction
         }
-      };
+      } catch (error) {
+        console.log('play_link check failed, proceeding to extraction:', error);
+        // fall through to extraction
+      }
     }
     
-    // If no play_link, try to extract using background scraper
+    // If no play_link or play_link is not accessible, try to extract using background scraper
     if (apiResponse.success && apiResponse.data.imdb_id) {
       const extractedLink = await extractM3u8Link(
         apiResponse.data.imdb_id,

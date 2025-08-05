@@ -17,15 +17,15 @@ const Jar: Jar = {
 
 const getSubtitlesFromOpenSubtitles = async (
   imdbId: string,
-  languages: string,
+  language: string,
   season?: string,
   episode?: string
 ): Promise<any> => {
   // Remove "tt" prefix if present, as rest.opensubtitles.org expects only the numeric part
   const imdbNumeric = imdbId.startsWith('tt') ? imdbId.slice(2) : imdbId;
-  let apiUrl = `https://rest.opensubtitles.org/search/imdbid-${imdbNumeric}/sublanguageid-${languages}`;
+  let apiUrl = `https://rest.opensubtitles.org/search/imdbid-${imdbNumeric}/sublanguageid-${language}`;
   if (season && episode) {
-    apiUrl = `https://rest.opensubtitles.org/search/episode-${episode}/imdbid-${imdbNumeric}/season-${season}/sublanguageid-${languages}`;
+    apiUrl = `https://rest.opensubtitles.org/search/episode-${episode}/imdbid-${imdbNumeric}/season-${season}/sublanguageid-${language}`;
   }
   try {
     const response = await fetch(apiUrl, {
