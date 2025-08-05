@@ -134,6 +134,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [selectedSubtitle, setSelectedSubtitle] = useState('');
   const [showSubtitleSelector, setShowSubtitleSelector] = useState(false);
   const [subtitleSearch, setSubtitleSearch] = useState('');
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch play link with 30-minute cache
   const { data: playData, isLoading: isLoadingLink, error: linkError } = useQuery<EnhancedPlayLinkResponse>({
@@ -175,11 +176,39 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    const handleMouseMove = () => {
+    const showControlsWithTimeout = () => {
       setShowControls(true);
-      clearTimeout(timeout);
-      timeout = setTimeout(() => setShowControls(false), 3000);
+      
+      // Clear any existing timeout
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
+      }
+      
+      // Set new timeout only if no dropdowns are open
+      if (!showQualitySelector && !showSubtitleSelector && !showSettings && !showShortcuts) {
+        controlsTimeoutRef.current = setTimeout(() => {
+          setShowControls(false);
+        }, 3000);
+      }
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      // Prevent hiding controls if mouse is over control elements
+      const target = e.target as Element;
+      const isOverControls = target.closest('[data-controls]') || 
+                           target.closest('[data-quality-selector]') || 
+                           target.closest('[data-subtitle-selector]') ||
+                           target.closest('.absolute.bottom-0');
+      
+      if (isOverControls) {
+        setShowControls(true);
+        if (controlsTimeoutRef.current) {
+          clearTimeout(controlsTimeoutRef.current);
+          controlsTimeoutRef.current = null;
+        }
+      } else {
+        showControlsWithTimeout();
+      }
     };
 
     const handleClick = (e: MouseEvent) => {
@@ -193,14 +222,42 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       }
     };
 
+    const handleFullscreenChange = () => {
+      // Reset controls when entering/exiting fullscreen
+      setShowControls(true);
+      showControlsWithTimeout();
+    };
+
+    const handleVisibilityChange = () => {
+      // Reset controls when tab becomes visible/hidden
+      if (!document.hidden) {
+        setShowControls(true);
+        showControlsWithTimeout();
+      }
+    };
+
+    // Add all event listeners
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('click', handleClick);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Show controls initially
+    showControlsWithTimeout();
+    
     return () => {
+      // Clean up all event listeners and timeouts
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('click', handleClick);
-      clearTimeout(timeout);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
+        controlsTimeoutRef.current = null;
+      }
     };
-  }, []);
+  }, [showQualitySelector, showSubtitleSelector, showSettings, showShortcuts]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -580,8 +637,22 @@ const togglePlay = useCallback(() => {
             "bg-black bg-opacity-40",
             showControls ? 'opacity-100' : 'opacity-0'
           )}
-          onMouseMove={() => setShowControls(true)}
-          onMouseLeave={() => setShowControls(false)}
+          data-controls
+          onMouseEnter={() => {
+            setShowControls(true);
+            if (controlsTimeoutRef.current) {
+              clearTimeout(controlsTimeoutRef.current);
+              controlsTimeoutRef.current = null;
+            }
+          }}
+          onMouseLeave={() => {
+            if (!showQualitySelector && !showSubtitleSelector && !showSettings && !showShortcuts) {
+              if (controlsTimeoutRef.current) {
+                clearTimeout(controlsTimeoutRef.current);
+              }
+              controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 1500);
+            }
+          }}
         >
           <Timeline
             duration={duration}
@@ -787,6 +858,7 @@ const togglePlay = useCallback(() => {
                 <li><b>F</b>: Fullscreen</li>
                 <li><b>M</b>: Mute</li>
                 <li><b>Q</b>: Quality Selector</li>
+                <li><b>C</b>: Subtitle Selector</li>
                 <li><b>?</b>: Show/Hide Shortcuts</li>
                 <li><b>Esc</b>: Close Player / Close Menus</li>
               </ul>
