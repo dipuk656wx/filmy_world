@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { FaArrowLeft } from 'react-icons/fa';
 import SearchBar from '../search-bar';
 
 const Header: React.FC = () => {
@@ -20,20 +21,7 @@ const Header: React.FC = () => {
               className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
               title="Go back"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
+              <FaArrowLeft className="w-4 h-4" />
             </button>
             
             <Link to="/" className="flex items-center space-x-2">

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { FaChevronDown, FaPlay, FaStar } from 'react-icons/fa';
 import { getTVShowSeason, getImageUrl, Season, Episode } from '../../services/tmdbApi';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface SeasonsEpisodesProps {
   tvId: number;
@@ -11,6 +12,7 @@ interface SeasonsEpisodesProps {
 const SeasonsEpisodes: React.FC<SeasonsEpisodesProps> = ({ tvId, totalSeasons }) => {
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState<Episode | null>(null);
+  const navigate = useNavigate();
 
   const { data: seasonData, isLoading, error } = useQuery({
     queryKey: ['tv-season', tvId, selectedSeason],
@@ -111,9 +113,7 @@ const SeasonsEpisodes: React.FC<SeasonsEpisodesProps> = ({ tvId, totalSeasons })
                     className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold"
                   >
                     View Full Season
-                    <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    <FaChevronDown className="ml-2 w-4 h-4 rotate-90" />
                   </Link>
                 </div>
               </div>
@@ -158,34 +158,22 @@ const SeasonsEpisodes: React.FC<SeasonsEpisodesProps> = ({ tvId, totalSeasons })
                             <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              // TODO: Add watch functionality for episode
+                              navigate(`/player/tv/${tvId}/${selectedSeason}/${episode.episode_number}`);
                             }}
                             className="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-md font-semibold flex items-center justify-center space-x-1 transition-colors"
                             >
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                            </svg>
+                            <FaPlay className="w-3 h-3" />
                             <span>Watch</span>
                             </button>
                         </div>
                       </div>
                     </div>
                     <div className="flex-shrink-0">
-                      <svg
+                      <FaChevronDown
                         className={`w-5 h-5 text-gray-400 transform transition-transform ${
                           selectedEpisode?.id === episode.id ? 'rotate-180' : ''
                         }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
+                      />
                     </div>
                   </div>
                 </div>
@@ -261,13 +249,11 @@ const SeasonsEpisodes: React.FC<SeasonsEpisodesProps> = ({ tvId, totalSeasons })
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            // TODO: Add watch functionality for episode
+                            navigate(`/player/tv/${tvId}/${selectedSeason}/${episode.episode_number}`);
                           }}
                           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold flex items-center space-x-2 transition-colors"
                         >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                          </svg>
+                          <FaPlay className="w-4 h-4" />
                           <span>Watch Episode {episode.episode_number}</span>
                         </button>
                       </div>

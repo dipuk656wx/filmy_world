@@ -49,3 +49,47 @@ input:focus {
 * {
   transition: all 0.2s ease-in-out;
 }
+
+/* Video Player Styles */
+.slider {
+  background: linear-gradient(to right, #3b82f6 0%, #3b82f6 var(--value, 0%), #6b7280 var(--value, 0%), #6b7280 100%);
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* Thin scrollbar for subtitle selector */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px !important;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5) !important;
+  border-radius: 2px !important;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.8) !important;
+}

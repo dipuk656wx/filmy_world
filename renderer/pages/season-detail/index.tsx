@@ -1,12 +1,14 @@
 import React from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { FaPlay } from 'react-icons/fa';
 import { getTVShowSeason, getImageUrl, getTVShowDetails } from '../../services/tmdbApi';
 import Header from '../../components/header';
 import { useScrollToTop } from '../../hooks/useScrollToTop';
 
 const SeasonDetail: React.FC = () => {
   const { tvId, seasonNumber } = useParams<{ tvId: string; seasonNumber: string }>();
+  const navigate = useNavigate();
   
   // Handle scroll restoration
   useScrollToTop();
@@ -195,14 +197,11 @@ const SeasonDetail: React.FC = () => {
                     {/* Watch Now Button */}
                     <button
                       onClick={() => {
-                        // TODO: Add watch functionality for episode
-                        console.log(`Watch episode ${episode.episode_number}`);
+                        navigate(`/player/tv/${tvId}/${seasonNumber}/${episode.episode_number}`);
                       }}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold flex items-center space-x-2 transition-colors"
                     >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                      </svg>
+                      <FaPlay className="w-4 h-4" />
                       <span>Watch Episode</span>
                     </button>
                   </div>

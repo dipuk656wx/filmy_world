@@ -1,12 +1,14 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { FaPlay, FaStar, FaCalendar, FaClock } from 'react-icons/fa';
 import { getMovieDetails, getImageUrl, getBackdropUrl } from '../../services/tmdbApi';
 import Header from '../../components/header';
 import { useScrollToTop } from '../../hooks/useScrollToTop';
 
 const MovieDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   
   // Handle scroll restoration
   useScrollToTop();
@@ -120,13 +122,11 @@ const MovieDetail: React.FC = () => {
               {/* Watch Now Button */}
               <button
                 onClick={() => {
-                  // TODO: Add watch functionality
+                  navigate(`/player/movie/${movie.id}`);
                 }}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold text-lg flex items-center space-x-2 transition-colors"
               >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                </svg>
+                <FaPlay className="w-5 h-5" />
                 <span>Watch Now</span>
               </button>
             </div>

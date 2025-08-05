@@ -8,6 +8,7 @@ import TVShowsPage from "./pages/tv-shows";
 import SeasonDetail from "./pages/season-detail";
 import PeoplePage from "./pages/people";
 import SearchResults from "./pages/search";
+import PlayerPage from "./pages/Player";
 
 export const router = createHashRouter([
   {
@@ -49,5 +50,13 @@ export const router = createHashRouter([
   {
     path: "/search",
     element: <SearchResults />,
+  },
+  {
+    path: "/player/:type/:id",
+    element: <PlayerPage />,
+  },
+  {
+    path: "/player/:type/:id/:season/:episode",
+    element: <PlayerPage />,
   },
 ]);

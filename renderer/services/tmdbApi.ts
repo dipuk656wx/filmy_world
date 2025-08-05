@@ -1,6 +1,8 @@
 // TMDb API Configuration
 // You'll need to get an API key from https://www.themoviedb.org/settings/api
 
+import { extractM3u8Link } from "../services/backgroundScraper";
+
 const TMDB_BASE_URL = 'http://172.233.155.175:5000/api/filmy/moviedb';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
 
@@ -283,3 +285,165 @@ export const getTVShowSeason = async (tvId: number, seasonNumber: number): Promi
 export const getTVShowEpisode = async (tvId: number, seasonNumber: number, episodeNumber: number): Promise<Episode> => {
   return apiRequest<Episode>(`/tv/${tvId}/season/${seasonNumber}/episode/${episodeNumber}`);
 };
+
+// Play Link API
+export interface PlayLinkResponse {
+  success: boolean;
+  data: {
+    imdb_id: string;
+    movieId: number;
+    play_link: string | null;
+  };
+  message?: string;
+  error?: string;
+}
+
+const PLAY_API_BASE_URL = 'http://172.233.155.175:5000/api/filmy';
+
+export const getPlayLink = async (
+  movieId: number, 
+  season?: number, 
+  episode?: number
+): Promise<PlayLinkResponse> => {
+  let url = `${PLAY_API_BASE_URL}/imdb/${movieId}`;
+  const params = new URLSearchParams();
+  
+  if (season !== undefined) {
+    params.append('season', season.toString());
+  }
+  if (episode !== undefined) {
+    params.append('episode', episode.toString());
+  }
+  
+  if (params.toString()) {
+    url += `?${params.toString()}`;
+  }
+  
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch play link: ${response.statusText}`);
+  }
+  
+  return response.json();
+};
+
+// Enhanced play link function with fallback
+export interface EnhancedPlayLinkResponse {
+  success: boolean;
+  data: {
+    imdb_id: string;
+    movieId: number;
+    play_link: string | null;
+    source: 'api' | 'extracted';
+  };
+  message?: string;
+  error?: string;
+}
+
+export const getPlayLinkWithFallback = async (
+  movieId: number,
+  season?: number,
+  episode?: number
+): Promise<EnhancedPlayLinkResponse> => {
+  try {
+    // First try to get play link from API
+    const apiResponse = await getPlayLink(movieId, season, episode);
+    
+    if (apiResponse.success && apiResponse.data.play_link) {
+      return {
+        ...apiResponse,
+        data: {
+          ...apiResponse.data,
+          source: 'api'
+        }
+      };
+    }
+    
+    // If no play_link, try to extract using background scraper
+    if (apiResponse.success && apiResponse.data.imdb_id) {
+      const extractedLink = await extractM3u8Link(
+        apiResponse.data.imdb_id,
+        movieId.toString(),
+        season?.toString(),
+        episode?.toString()
+      );
+      
+      if (extractedLink) {
+        return {
+          success: true,
+          data: {
+            imdb_id: apiResponse.data.imdb_id,
+            movieId: movieId,
+            play_link: extractedLink,
+            source: 'extracted'
+          }
+        };
+      }
+    }
+    
+    // Return original response if extraction failed
+    return {
+      ...apiResponse,
+      data: {
+        ...apiResponse.data,
+        source: 'api'
+      }
+    };
+    
+  } catch (error) {
+    console.error('Error in getPlayLinkWithFallback:', error);
+    throw error;
+  }
+};
+export async function updateVidsrcLinkBackground(
+  movieId: string,
+  playLink: string,
+  season?: string,
+  episode?: string,
+  imdbId?: string
+): Promise<void> {
+  try {
+    // Don't update if we don't have the required fields
+    if (!imdbId || !playLink) {
+      console.log('Skipping update - missing imdb_id or play_link');
+      return;
+    }
+
+    const body: any = {
+      imdb_id: imdbId,
+      play_link: playLink
+    };
+    
+    // Only add season and episode if they exist
+    if (season) {
+      body.season = season;
+    }
+    if (episode) {
+      body.episode = episode;
+    }
+
+    console.log('Updating vidsrc link:', body);
+    
+    const response = await fetch(`${PLAY_API_BASE_URL}/imdb/${movieId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+    
+    if (!response.ok) {
+      console.error('Failed to update vidsrc link:', response.status, response.statusText);
+    } else {
+      console.log('Successfully updated vidsrc link');
+    }
+  } catch (error) {
+    console.error("Failed to update vidsrc link:", error);
+  }
+}
