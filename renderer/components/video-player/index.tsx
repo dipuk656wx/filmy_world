@@ -6,6 +6,7 @@ import Hls from 'hls.js';
 import { FaCog, FaFastForward, FaFastBackward, FaQuestionCircle, FaTv, FaArrowLeft, FaStepBackward, FaStepForward, FaClosedCaptioning } from 'react-icons/fa';
 import clsx from 'clsx';
 import { getPlayLinkWithFallback, getTVShowSeason, Episode, EnhancedPlayLinkResponse } from '../../services/tmdbApi';
+import { getSubtitlesFromOpenSubtitles, SubtitleInfo } from '../../services/openSubAPI';
 import { languageOptions } from '../../common/languageOptions';
 
 // components/VideoPlayer/Timeline.tsx
@@ -134,6 +135,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [selectedSubtitle, setSelectedSubtitle] = useState('');
   const [showSubtitleSelector, setShowSubtitleSelector] = useState(false);
   const [subtitleSearch, setSubtitleSearch] = useState('');
+  const [availableSubtitles, setAvailableSubtitles] = useState<SubtitleInfo[]>([]);
+  const [showSubtitleFiles, setShowSubtitleFiles] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState('');
+  const [loadingSubtitles, setLoadingSubtitles] = useState(false);
+  const [currentSubtitleTrack, setCurrentSubtitleTrack] = useState('');
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch play link with 30-minute cache
@@ -159,6 +165,136 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       // Replace current history entry instead of pushing new one
       navigate(`/player/tv/${movieId}/${season}/${episodeNumber}`, { replace: true });
     }
+  };
+
+  // Handle language selection and fetch subtitles
+  const handleLanguageSelect = async (languageCode: string, languageLabel: string) => {
+    if (!playData?.data?.imdb_id) {
+      console.error('No IMDB ID available for subtitle search');
+      return;
+    }
+
+    setLoadingSubtitles(true);
+    setSelectedLanguage(languageLabel);
+    
+    try {
+      const subtitles = await getSubtitlesFromOpenSubtitles(
+        playData.data.imdb_id,
+        languageCode,
+        season?.toString(),
+        episode?.toString()
+      );
+      
+      setAvailableSubtitles(subtitles);
+      setShowSubtitleFiles(true);
+      setSubtitleSearch(''); // Clear search when showing files
+    } catch (error) {
+      console.error('Failed to fetch subtitles:', error);
+      setAvailableSubtitles([]);
+    } finally {
+      setLoadingSubtitles(false);
+    }
+  };
+
+  // Subtitle conversion utilities
+  const convertSrtToVtt = async (subtitleUrl: string, isLink: boolean = true) => {
+    try {
+      let subtitleContent: string;
+
+      if (isLink) {
+        const response = await fetch(subtitleUrl);
+        if (!response.ok) throw new Error('Failed to fetch subtitle file');
+        subtitleContent = await response.text();
+      } else {
+        subtitleContent = subtitleUrl; // Direct content
+      }
+
+      const fileExt = isLink ? subtitleUrl.split('.').pop()?.toLowerCase() : 'vtt';
+      let vttContent: string;
+      const styleBlock = '\nSTYLE\n::cue { font-size: 85%; color: #fff; background-color: rgba(0, 0, 0, 0); text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), -2px -2px 4px rgba(0, 0, 0, 0.8), 2px -2px 4px rgba(0, 0, 0, 0.8), -2px 2px 4px rgba(0, 0, 0, 0.8);}';
+
+      if (fileExt === 'srt') {
+        vttContent = 'WEBVTT' + styleBlock + '\n\n' + subtitleContent.replace(/,/g, '.').replace(/(\d+)\r\n/g, '$1.0000\r\n');
+      } else if (fileExt === 'vtt') {
+        vttContent = 'WEBVTT' + styleBlock + '\n\n' + subtitleContent.replace(/,/g, '.').replace(/(\d+)\n/g, '$1.0000\n');
+      } else {
+        vttContent = 'WEBVTT' + styleBlock + '\n\n' + subtitleContent;
+      }
+
+      // Create blob URL
+      const blob = new Blob([vttContent], { type: 'text/vtt' });
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Add subtitle track to video element
+      if (videoRef.current) {
+        // Remove existing subtitle tracks
+        const existingTracks = videoRef.current.querySelectorAll('track[kind="subtitles"]');
+        existingTracks.forEach(track => track.remove());
+        
+        // Add new subtitle track
+        const track = document.createElement('track');
+        track.kind = 'subtitles';
+        track.label = selectedLanguage || 'Subtitles';
+        track.srclang = selectedSubtitle || 'en';
+        track.src = blobUrl;
+        track.default = true;
+        
+        videoRef.current.appendChild(track);
+        
+        // Enable the track
+        track.addEventListener('load', () => {
+          if (videoRef.current?.textTracks[0]) {
+            videoRef.current.textTracks[0].mode = 'showing';
+          }
+        });
+        
+        setCurrentSubtitleTrack(blobUrl);
+      }
+
+      return vttContent;
+    } catch (error) {
+      console.error('Subtitle conversion error:', error);
+      throw error;
+    }
+  };
+
+  // Handle subtitle file selection and load VTT
+  const handleSubtitleFileSelect = async (subtitleInfo: SubtitleInfo) => {
+    setLoadingSubtitles(true);
+    
+    try {
+      // Get VTT link using the vidsrc.net format
+      const vttLink = `https://vidsrc.net/sub/ops-${subtitleInfo.IDSubtitleFile}.vtt`;
+      
+      // Convert and load subtitle
+      await convertSrtToVtt(vttLink, true);
+      
+      // Close subtitle selector
+      setShowSubtitleSelector(false);
+      setShowSubtitleFiles(false);
+      setSubtitleSearch('');
+      
+    } catch (error) {
+      console.error('Failed to load subtitle:', error);
+      // Fallback: try using the original download link
+      try {
+        await convertSrtToVtt(subtitleInfo.SubDownloadLink, true);
+        setShowSubtitleSelector(false);
+        setShowSubtitleFiles(false);
+        setSubtitleSearch('');
+      } catch (fallbackError) {
+        console.error('Fallback subtitle loading also failed:', fallbackError);
+      }
+    } finally {
+      setLoadingSubtitles(false);
+    }
+  };
+
+  // Handle back button in subtitle files view
+  const handleSubtitleBack = () => {
+    setShowSubtitleFiles(false);
+    setAvailableSubtitles([]);
+    setSelectedLanguage('');
   };
 
   const handleWaiting = () => {
@@ -218,7 +354,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       }
       if (!target.closest('[data-subtitle-selector]')) {
         setShowSubtitleSelector(false);
+        setShowSubtitleFiles(false);
         setSubtitleSearch("");
+        setAvailableSubtitles([]);
+        setSelectedLanguage("");
       }
     };
 
@@ -258,6 +397,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       }
     };
   }, [showQualitySelector, showSubtitleSelector, showSettings, showShortcuts]);
+
+  // Cleanup effect for blob URLs
+  useEffect(() => {
+    return () => {
+      // Clean up any blob URLs when component unmounts
+      if (videoRef.current) {
+        const tracks = videoRef.current.querySelectorAll('track[kind="subtitles"]');
+        tracks.forEach(track => {
+          const trackElement = track as HTMLTrackElement;
+          if (trackElement.src.startsWith('blob:')) {
+            URL.revokeObjectURL(trackElement.src);
+          }
+        });
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -434,7 +589,11 @@ const togglePlay = useCallback(() => {
           if (showQualitySelector) {
             setShowQualitySelector(false);
           } else if (showSubtitleSelector) {
-            setShowSubtitleSelector(false);
+            if (showSubtitleFiles) {
+              handleSubtitleBack();
+            } else {
+              setShowSubtitleSelector(false);
+            }
           } else if (showSettings) {
             setShowSettings(false);
           } else if (showShortcuts) {
@@ -450,7 +609,7 @@ const togglePlay = useCallback(() => {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [toggleFullscreen, toggleMute, showQualitySelector, showSubtitleSelector, showSettings, showShortcuts, qualityLevels, togglePlay]);
+  }, [toggleFullscreen, toggleMute, showQualitySelector, showSubtitleSelector, showSubtitleFiles, showSettings, showShortcuts, qualityLevels, togglePlay]);
 
   const handleTimeUpdate = useCallback(() => {
     if (videoRef.current) {
@@ -474,6 +633,20 @@ const togglePlay = useCallback(() => {
   }, []);
 
   const handleClosePlayer = () => {
+    const currTime = videoRef.current?.currentTime || 0;
+    const totalTime = videoRef.current?.duration || 1;
+    
+    // Clean up subtitle blob URLs
+    if (videoRef.current) {
+      const tracks = videoRef.current.querySelectorAll('track[kind="subtitles"]');
+      tracks.forEach(track => {
+        const trackElement = track as HTMLTrackElement;
+        if (trackElement.src.startsWith('blob:')) {
+          URL.revokeObjectURL(trackElement.src);
+        }
+      });
+    }
+    
     if (videoRef.current) {
       videoRef.current.pause();
       videoRef.current.src = "";
@@ -715,59 +888,121 @@ const togglePlay = useCallback(() => {
                 </button>
                 {showSubtitleSelector && (
                   <div className="absolute right-0 bottom-full mb-2 w-56 bg-black/90 text-white rounded-lg shadow-lg z-10 h-80 flex flex-col">
-                    {/* Search Input */}
-                    <div className="p-3 border-b border-gray-600 flex-shrink-0">
-                      <input
-                        type="text"
-                        placeholder="Search languages..."
-                        value={subtitleSearch}
-                        onChange={(e) => setSubtitleSearch(e.target.value)}
-                        onMouseEnter={() => setShowControls(true)}
-                        onFocus={() => setShowControls(true)}
-                        className="w-full bg-gray-800 text-white px-3 py-2 rounded text-sm border border-gray-600 focus:border-blue-500 focus:outline-none"
-                        autoFocus
-                      />
-                    </div>
-                    {/* Subtitle Options */}
-                    <div 
-                      className="flex-1 overflow-y-auto scrollbar-thin"
-                      onMouseEnter={() => setShowControls(true)}
-                    >
-                      <div
-                        className={clsx(
-                          "px-3 py-2 text-sm hover:cursor-pointer hover:bg-gray-700 hover:text-blue-400",
-                          selectedSubtitle === "" && "bg-blue-700 text-blue-300"
-                        )}
-                        onClick={() => {
-                          setSelectedSubtitle("");
-                          setShowSubtitleSelector(false);
-                          setSubtitleSearch("");
-                        }}
-                      >
-                        No Subtitles
-                      </div>
-                      {languageOptions
-                        .filter(lang => 
-                          lang.label.toLowerCase().includes(subtitleSearch.toLowerCase()) ||
-                          lang.value.toLowerCase().includes(subtitleSearch.toLowerCase())
-                        )
-                        .map((lang) => (
+                    {!showSubtitleFiles ? (
+                      // Language Selection View
+                      <>
+                        {/* Search Input */}
+                        <div className="p-3 border-b border-gray-600 flex-shrink-0">
+                          <input
+                            type="text"
+                            placeholder="Search languages..."
+                            value={subtitleSearch}
+                            onChange={(e) => setSubtitleSearch(e.target.value)}
+                            onMouseEnter={() => setShowControls(true)}
+                            onFocus={() => setShowControls(true)}
+                            className="w-full bg-gray-800 text-white px-3 py-2 rounded text-sm border border-gray-600 focus:border-blue-500 focus:outline-none"
+                            autoFocus
+                          />
+                        </div>
+                        {/* Language Options */}
+                        <div 
+                          className="flex-1 overflow-y-auto scrollbar-thin"
+                          onMouseEnter={() => setShowControls(true)}
+                        >
                           <div
-                            key={lang.value}
                             className={clsx(
                               "px-3 py-2 text-sm hover:cursor-pointer hover:bg-gray-700 hover:text-blue-400",
-                              selectedSubtitle === lang.value && "bg-blue-700 text-blue-300"
+                              selectedSubtitle === "" && "bg-blue-700 text-blue-300"
                             )}
                             onClick={() => {
-                              setSelectedSubtitle(lang.value);
+                              setSelectedSubtitle("");
+                              setCurrentSubtitleTrack("");
                               setShowSubtitleSelector(false);
                               setSubtitleSearch("");
+                              // Remove subtitle tracks
+                              if (videoRef.current) {
+                                const tracks = videoRef.current.querySelectorAll('track[kind="subtitles"]');
+                                tracks.forEach(track => {
+                                  // Clean up blob URL if it exists
+                                  const trackElement = track as HTMLTrackElement;
+                                  if (trackElement.src.startsWith('blob:')) {
+                                    URL.revokeObjectURL(trackElement.src);
+                                  }
+                                  trackElement.remove();
+                                });
+                              }
                             }}
                           >
-                            {lang.label}
+                            No Subtitles
                           </div>
-                        ))}
-                    </div>
+                          {languageOptions
+                            .filter(lang => 
+                              lang.label.toLowerCase().includes(subtitleSearch.toLowerCase()) ||
+                              lang.value.toLowerCase().includes(subtitleSearch.toLowerCase())
+                            )
+                            .map((lang) => (
+                              <div
+                                key={lang.value}
+                                className="px-3 py-2 text-sm hover:cursor-pointer hover:bg-gray-700 hover:text-blue-400 flex items-center justify-between"
+                                onClick={() => handleLanguageSelect(lang.value, lang.label)}
+                              >
+                                <span>{lang.label}</span>
+                                {loadingSubtitles && selectedLanguage === lang.label && (
+                                  <div className="w-4 h-4 border-2 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+                                )}
+                              </div>
+                            ))}
+                        </div>
+                      </>
+                    ) : (
+                      // Subtitle Files View
+                      <>
+                        {/* Header with back button */}
+                        <div className="p-3 border-b border-gray-600 flex-shrink-0">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <button
+                              onClick={handleSubtitleBack}
+                              className="text-white hover:text-blue-400"
+                            >
+                              <FaArrowLeft className="w-4 h-4" />
+                            </button>
+                            <span className="text-sm font-medium">{selectedLanguage}</span>
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {availableSubtitles.length} subtitle{availableSubtitles.length !== 1 ? 's' : ''} found
+                          </div>
+                        </div>
+                        {/* Subtitle Files */}
+                        <div 
+                          className="flex-1 overflow-y-auto scrollbar-thin"
+                          onMouseEnter={() => setShowControls(true)}
+                        >
+                          {loadingSubtitles ? (
+                            <div className="flex items-center justify-center h-20">
+                              <div className="w-6 h-6 border-2 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+                            </div>
+                          ) : availableSubtitles.length > 0 ? (
+                            availableSubtitles.map((subtitle, index) => (
+                              <div
+                                key={subtitle.IDSubtitleFile}
+                                className="px-3 py-3 text-sm hover:cursor-pointer hover:bg-gray-700 hover:text-blue-400 border-b border-gray-700 last:border-b-0"
+                                onClick={() => handleSubtitleFileSelect(subtitle)}
+                              >
+                                <div className="font-medium truncate">{subtitle.SubFileName}</div>
+                                <div className="text-xs text-gray-400 mt-1 flex items-center space-x-2">
+                                  <span>{subtitle.SubFormat?.toUpperCase()}</span>
+                                  {subtitle.MovieYear && <span>• {subtitle.MovieYear}</span>}
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="flex items-center justify-center h-20 text-gray-400 text-sm">
+                              No subtitles found
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
