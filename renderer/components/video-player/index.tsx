@@ -6,7 +6,7 @@ import Hls from 'hls.js';
 import { FaCog, FaFastForward, FaFastBackward, FaQuestionCircle, FaTv, FaArrowLeft, FaStepBackward, FaStepForward, FaClosedCaptioning } from 'react-icons/fa';
 import clsx from 'clsx';
 import { getPlayLinkWithFallback, getTVShowSeason, Episode, EnhancedPlayLinkResponse } from '../../services/tmdbApi';
-import { getSubtitlesFromOpenSubtitles, SubtitleInfo } from '../../services/openSubAPI';
+import { getSubtitlesFromOpenSubtitles, getVttLink, SubtitleInfo } from '../../services/openSubAPI';
 import { languageOptions } from '../../common/languageOptions';
 
 // components/VideoPlayer/Timeline.tsx
@@ -264,10 +264,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     
     try {
       // Get VTT link using the vidsrc.net format
+      const getvttLinkFunctionCall = await getVttLink(subtitleInfo);
       const vttLink = `https://vidsrc.net/sub/ops-${subtitleInfo.IDSubtitleFile}.vtt`;
       
-      // Convert and load subtitle
-      await convertSrtToVtt(vttLink, true);
+      // Load subtitle
+      convertSrtToVtt(vttLink, true);
       
       // Close subtitle selector
       setShowSubtitleSelector(false);
@@ -277,14 +278,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     } catch (error) {
       console.error('Failed to load subtitle:', error);
       // Fallback: try using the original download link
-      try {
-        await convertSrtToVtt(subtitleInfo.SubDownloadLink, true);
-        setShowSubtitleSelector(false);
-        setShowSubtitleFiles(false);
-        setSubtitleSearch('');
-      } catch (fallbackError) {
-        console.error('Fallback subtitle loading also failed:', fallbackError);
-      }
     } finally {
       setLoadingSubtitles(false);
     }
