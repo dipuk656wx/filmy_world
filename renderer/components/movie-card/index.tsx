@@ -33,7 +33,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ item, type }) => {
           }}
         />
         <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded-md text-sm">
-          ⭐ {item.vote_average.toFixed(1)}
+          ⭐ {item.vote_average?.toFixed(1)}
         </div>
       </div>
       

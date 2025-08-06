@@ -1,5 +1,5 @@
 {
-  "name": "careerwill",
+  "name": "filmyworld",
   "version": "1.0.0",
   "main": "static/main.build.js",
   "scripts": {
@@ -8,8 +8,8 @@
     "release": "npm run build & npx electron-builder"
   },
   "build": {
-    "appId": "app.courseworld.electron-client",
-    "productName": "Course World",
+    "appId": "app.Filmyworld.electron-client",
+    "productName": "Filmy World",
     "files": [
       "static/**/*"
     ],
