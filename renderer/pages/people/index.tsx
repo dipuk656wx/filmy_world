@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getPopularPeople, getImageUrl } from '../../services/tmdbApi';
 import Header from '../../components/header';
@@ -69,14 +70,18 @@ const PeoplePage: React.FC = () => {
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
               {allPeople.map((person: any) => (
-                <div key={person.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                <Link 
+                  key={person.id} 
+                  to={`/person/${person.id}`}
+                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+                >
                   <img
                     src={getImageUrl(person.profile_path)}
                     alt={person.name}
                     className="w-full h-64 object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src = '/placeholder-image.jpg';
+                      target.src = './placeholder-image.jpg';
                     }}
                   />
                   <div className="p-4">
@@ -90,7 +95,7 @@ const PeoplePage: React.FC = () => {
                       Popularity: {person.popularity.toFixed(1)}
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
 

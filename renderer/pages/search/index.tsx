@@ -111,7 +111,7 @@ const SearchResults: React.FC = () => {
                         className="w-full h-64 object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = '/placeholder-image.jpg';
+                          target.src = './placeholder-image.jpg';
                         }}
                       />
                       <div className="p-4">

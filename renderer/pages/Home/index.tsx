@@ -118,6 +118,47 @@ const Home: React.FC = () => {
             ))}
           </div>
         </section>
+
+        {/* TMDb Credit */}
+        <section className="text-center mb-8">
+          <div className="bg-white rounded-lg shadow-md p-4 inline-block">
+            <p className="text-sm text-gray-600">
+              This product uses the{' '}
+              <a 
+                href="https://www.themoviedb.org/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 font-semibold"
+              >
+                TMDb API
+              </a>
+              {' '}but is not endorsed or certified by{' '}
+              <a 
+                href="https://www.themoviedb.org/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 font-semibold"
+              >
+                TMDb
+              </a>
+              .
+            </p>
+            <div className="mt-2">
+              <a 
+                href="https://www.themoviedb.org/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-block"
+              >
+                <img 
+                  src="./images/blue_long_2-9665a76b1ae401a510ec1e0ca40ddcb3b0cfe45f1d51b77a308fea0845885648.svg"
+                  alt="The Movie Database (TMDb)"
+                  className="h-6 mx-auto"
+                />
+              </a>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   );

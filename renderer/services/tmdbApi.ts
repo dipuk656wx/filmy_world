@@ -122,6 +122,58 @@ export interface Person {
   popularity: number;
 }
 
+export interface PersonDetails extends Person {
+  birthday: string | null;
+  deathday: string | null;
+  also_known_as: string[];
+  gender: number;
+  biography: string;
+  place_of_birth: string | null;
+  imdb_id: string | null;
+  homepage: string | null;
+}
+
+export interface PersonMovieCredit {
+  id: number;
+  title: string;
+  poster_path: string | null;
+  release_date: string;
+  character?: string;
+  job?: string;
+  vote_average: number;
+  genre_ids: number[];
+}
+
+export interface PersonTVCredit {
+  id: number;
+  name: string;
+  poster_path: string | null;
+  first_air_date: string;
+  character?: string;
+  job?: string;
+  vote_average: number;
+  episode_count?: number;
+  genre_ids: number[];
+}
+
+export interface PersonCredits {
+  id: number;
+  cast: PersonMovieCredit[];
+  crew: PersonMovieCredit[];
+}
+
+export interface PersonTVCredits {
+  id: number;
+  cast: PersonTVCredit[];
+  crew: PersonTVCredit[];
+}
+
+export interface PersonCombinedCredits {
+  id: number;
+  cast: (PersonMovieCredit | PersonTVCredit)[];
+  crew: (PersonMovieCredit | PersonTVCredit)[];
+}
+
 // API Helper function
 const apiRequest = async <T>(endpoint: string): Promise<T> => {
   const separator = endpoint.includes('?') ? '&' : '?';
@@ -214,6 +266,22 @@ export const getPopularPeople = async (page: number = 1): Promise<TMDbResponse<P
 
 export const searchPeople = async (query: string, page: number = 1): Promise<TMDbResponse<Person>> => {
   return apiRequest<TMDbResponse<Person>>(`/search/person?query=${encodeURIComponent(query)}&page=${page}`);
+};
+
+export const getPersonDetails = async (personId: number): Promise<PersonDetails> => {
+  return apiRequest<PersonDetails>(`/person/${personId}`);
+};
+
+export const getPersonMovieCredits = async (personId: number): Promise<PersonCredits> => {
+  return apiRequest<PersonCredits>(`/person/${personId}/movie_credits`);
+};
+
+export const getPersonTVCredits = async (personId: number): Promise<PersonTVCredits> => {
+  return apiRequest<PersonTVCredits>(`/person/${personId}/tv_credits`);
+};
+
+export const getPersonCombinedCredits = async (personId: number): Promise<PersonCombinedCredits> => {
+  return apiRequest<PersonCombinedCredits>(`/person/${personId}/combined_credits`);
 };
 
 // Genre API functions
