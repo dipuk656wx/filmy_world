@@ -25,8 +25,12 @@ const Header: React.FC = () => {
             </button>
             
             <Link to="/" className="flex items-center space-x-2">
-              <div className="text-2xl font-bold text-blue-500">🎬</div>
-              <span className="text-xl font-bold">MovieDB</span>
+              <img 
+                src="./images/showtime_icon.png" 
+                alt="Showtime" 
+                className="w-8 h-8 rounded"
+              />
+              <span className="text-xl font-bold">Showtime</span>
             </Link>
           </div>
 

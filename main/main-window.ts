@@ -11,7 +11,7 @@ function createMainWindow(): BrowserWindow {
     show: false,
     backgroundColor: "#181818",
     alwaysOnTop: false,
-    icon: path.join(__dirname, "/images/course_world.png"),
+    icon: path.join(__dirname, "/images/showtime_icon.png"),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -22,7 +22,7 @@ function createMainWindow(): BrowserWindow {
   });
 
   mainWindow.removeMenu();
-  mainWindow.setTitle(`Filmy World`);
+  mainWindow.setTitle(`Showtime`);
   mainWindow.loadFile(path.join(__dirname, "..", "static", "index.html"));
 
   // Only open DevTools in development and after window is ready

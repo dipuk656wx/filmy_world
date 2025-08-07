@@ -1,5 +1,5 @@
 {
-  "name": "filmyworld",
+  "name": "showtime",
   "version": "1.0.0",
   "main": "static/main.build.js",
   "scripts": {
@@ -8,15 +8,15 @@
     "release": "npm run build & npx electron-builder"
   },
   "build": {
-    "appId": "app.Filmyworld.electron-client",
-    "productName": "Filmy World",
+    "appId": "app.Showtime.electron-client",
+    "productName": "Showtime",
     "files": [
       "static/**/*"
     ],
     "win": {
       "target": "nsis",
       "asar": true,
-      "icon": "static/images/course_world.png"
+      "icon": "static/images/showtime_icon.png"
     }
   },
   "author": "",

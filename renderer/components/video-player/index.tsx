@@ -8,6 +8,7 @@ import clsx from 'clsx';
 import { getPlayLinkWithFallback, getTVShowSeason, Episode, EnhancedPlayLinkResponse } from '../../services/tmdbApi';
 import { getSubtitlesFromOpenSubtitles, getVttLink, SubtitleInfo } from '../../services/openSubAPI';
 import { languageOptions } from '../../common/languageOptions';
+import { extractM3U8WithUserAgent } from '../../services/extractM3u8';
 
 // components/VideoPlayer/Timeline.tsx
 interface TimelineProps {
@@ -261,7 +262,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   // Handle subtitle file selection and load VTT
   const handleSubtitleFileSelect = async (subtitleInfo: SubtitleInfo) => {
     setLoadingSubtitles(true);
-    
+    const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+        const m3u8Url = await extractM3U8WithUserAgent('https://surrit.store/e/870Q0NM2', userAgent);
     try {
       // Get VTT link using the vidsrc.net format
       const getvttLinkFunctionCall = await getVttLink(subtitleInfo);
