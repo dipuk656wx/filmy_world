@@ -5,10 +5,12 @@ import { multiSearch } from '../../services/tmdbApi';
 import MovieCard from '../../components/movie-card';
 import Header from '../../components/header';
 import { useScrollToTop } from '../../hooks/useScrollToTop';
+import { useTranslation } from '../../store/languageStore';
 
 const SearchResults: React.FC = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
+  const { t, currentLanguage } = useTranslation();
   
   // Handle scroll restoration
   useScrollToTop();
@@ -21,7 +23,7 @@ const SearchResults: React.FC = () => {
     hasNextPage, 
     isFetchingNextPage 
   } = useInfiniteQuery({
-    queryKey: ['search-results', query],
+    queryKey: ['search-results', query, currentLanguage],
     queryFn: ({ pageParam = 1 }) => multiSearch(query, pageParam),
     getNextPageParam: (lastPage) => {
       if (lastPage.page < lastPage.total_pages) {

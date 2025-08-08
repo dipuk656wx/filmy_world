@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaArrowRight } from 'react-icons/fa';
+import { useTranslation } from '../../store/languageStore';
 
 interface SearchBarProps {
   onSearch?: (query: string) => void;
@@ -9,10 +10,13 @@ interface SearchBarProps {
 
 const SearchBar: React.FC<SearchBarProps> = ({
   onSearch,
-  placeholder = "Search movies, TV shows, people..."
+  placeholder
 }) => {
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  const defaultPlaceholder = placeholder || t('search');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +39,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={placeholder}
+          placeholder={defaultPlaceholder}
           className="w-full px-4 py-2 pl-10 pr-4 text-gray-900 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
         <div className="absolute inset-y-0 left-0 flex items-center pl-3">

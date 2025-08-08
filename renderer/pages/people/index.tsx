@@ -4,8 +4,11 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { getPopularPeople, getImageUrl } from '../../services/tmdbApi';
 import Header from '../../components/header';
 import { useScrollToTop } from '../../hooks/useScrollToTop';
+import { useTranslation } from '../../store/languageStore';
 
 const PeoplePage: React.FC = () => {
+  const { t, currentLanguage } = useTranslation();
+  
   // Handle scroll restoration
   useScrollToTop();
   
@@ -17,7 +20,7 @@ const PeoplePage: React.FC = () => {
     hasNextPage, 
     isFetchingNextPage 
   } = useInfiniteQuery({
-    queryKey: ['popular-people'],
+    queryKey: ['popular-people', currentLanguage],
     queryFn: ({ pageParam = 1 }) => getPopularPeople(pageParam),
     getNextPageParam: (lastPage) => {
       if (lastPage.page < lastPage.total_pages) {
@@ -45,24 +48,24 @@ const PeoplePage: React.FC = () => {
       <main className="container mx-auto px-4 py-8 pt-24">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Popular People
+            {t('popular')} {t('people')}
           </h1>
           {totalResults > 0 && (
             <p className="text-gray-600">
-              {totalResults.toLocaleString()} people
+              {totalResults.toLocaleString()} {t('people').toLowerCase()}
             </p>
           )}
         </div>
 
         {isLoading && !data && (
           <div className="flex items-center justify-center h-64">
-            <div className="text-xl">Loading people...</div>
+            <div className="text-xl">{t('loading')}</div>
           </div>
         )}
 
         {error && (
           <div className="flex items-center justify-center h-64">
-            <div className="text-xl text-red-600">Error loading people. Please try again.</div>
+            <div className="text-xl text-red-600">{t('error')}</div>
           </div>
         )}
 
@@ -92,7 +95,7 @@ const PeoplePage: React.FC = () => {
                       {person.known_for_department}
                     </p>
                     <div className="text-xs text-gray-500">
-                      Popularity: {person.popularity.toFixed(1)}
+                      {t('popularity')}: {person.popularity.toFixed(1)}
                     </div>
                   </div>
                 </Link>
@@ -107,7 +110,7 @@ const PeoplePage: React.FC = () => {
                   disabled={isFetchingNextPage}
                   className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
                 >
-                  {isFetchingNextPage ? 'Loading...' : 'Load More'}
+                  {isFetchingNextPage ? t('loading') : t('loadMore')}
                 </button>
               </div>
             )}

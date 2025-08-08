@@ -4,25 +4,27 @@ import { getTrendingMovies, getPopularMovies, getTrendingTVShows, Movie, TVShow,
 import MovieCard from '../../components/movie-card';
 import Header from '../../components/header';
 import { useScrollToTop } from '../../hooks/useScrollToTop';
+import { useTranslation } from '../../store/languageStore';
 
 const Home: React.FC = () => {
   const [heroIndex, setHeroIndex] = useState(0);
+  const { t, currentLanguage } = useTranslation();
   
   // Handle scroll restoration
   useScrollToTop();
 
   const { data: trendingMovies } = useQuery({
-    queryKey: ['trending-movies'],
+    queryKey: ['trending-movies', currentLanguage],
     queryFn: () => getTrendingMovies('week'),
   });
 
   const { data: popularMovies } = useQuery({
-    queryKey: ['popular-movies'],
+    queryKey: ['popular-movies', currentLanguage],
     queryFn: () => getPopularMovies(),
   });
 
   const { data: trendingTVShows } = useQuery({
-    queryKey: ['trending-tv'],
+    queryKey: ['trending-tv', currentLanguage],
     queryFn: () => getTrendingTVShows('week'),
   });
 
@@ -91,7 +93,7 @@ const Home: React.FC = () => {
       <main className="container mx-auto px-4 py-8">
         {/* Trending Movies */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Trending Movies</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('trendingMovies')}</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {trendingMovies?.results.slice(0, 10).map((movie) => (
               <MovieCard key={movie.id} item={movie} type="movie" />
@@ -101,7 +103,7 @@ const Home: React.FC = () => {
 
         {/* Popular Movies */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Popular Movies</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('popularMovies')}</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {popularMovies?.results.slice(0, 10).map((movie) => (
               <MovieCard key={movie.id} item={movie} type="movie" />
@@ -111,7 +113,7 @@ const Home: React.FC = () => {
 
         {/* Trending TV Shows */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Trending TV Shows</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('trendingTVShows')}</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {trendingTVShows?.results.slice(0, 10).map((show) => (
               <MovieCard key={show.id} item={show} type="tv" />
@@ -123,25 +125,7 @@ const Home: React.FC = () => {
         <section className="text-center mb-8">
           <div className="bg-white rounded-lg shadow-md p-4 inline-block">
             <p className="text-sm text-gray-600">
-              This product uses the{' '}
-              <a 
-                href="https://www.themoviedb.org/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 font-semibold"
-              >
-                TMDb API
-              </a>
-              {' '}but is not endorsed or certified by{' '}
-              <a 
-                href="https://www.themoviedb.org/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 font-semibold"
-              >
-                TMDb
-              </a>
-              .
+              {t('tmdbAttribution')}
             </p>
             <div className="mt-2">
               <a 

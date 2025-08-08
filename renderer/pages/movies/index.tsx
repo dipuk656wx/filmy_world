@@ -10,10 +10,12 @@ import {
 import MovieCard from '../../components/movie-card';
 import Header from '../../components/header';
 import { useScrollToTop } from '../../hooks/useScrollToTop';
+import { useTranslation } from '../../store/languageStore';
 
 const MoviesPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { category = 'popular' } = useParams<{ category: string }>();
+  const { t, currentLanguage } = useTranslation();
   
   // Handle scroll restoration
   useScrollToTop();
@@ -39,7 +41,7 @@ const MoviesPage: React.FC = () => {
     hasNextPage, 
     isFetchingNextPage 
   } = useInfiniteQuery({
-    queryKey: ['movies', category],
+    queryKey: ['movies', category, currentLanguage],
     queryFn: ({ pageParam = 1 }) => getMoviesFunction()(pageParam),
     getNextPageParam: (lastPage) => {
       if (lastPage.page < lastPage.total_pages) {
@@ -57,13 +59,13 @@ const MoviesPage: React.FC = () => {
   const getCategoryTitle = () => {
     switch (category) {
       case 'top-rated':
-        return 'Top Rated Movies';
+        return t('topRatedMovies');
       case 'upcoming':
-        return 'Upcoming Movies';
+        return t('upcomingMovies');
       case 'now-playing':
-        return 'Now Playing Movies';
+        return t('nowPlaying');
       default:
-        return 'Popular Movies';
+        return t('popularMovies');
     }
   };
 
@@ -84,7 +86,7 @@ const MoviesPage: React.FC = () => {
           </h1>
           {totalResults > 0 && (
             <p className="text-gray-600">
-              {totalResults.toLocaleString()} movies
+              {totalResults.toLocaleString()} {t('movies').toLowerCase()}
             </p>
           )}
         </div>
@@ -93,10 +95,10 @@ const MoviesPage: React.FC = () => {
         <div className="mb-8">
           <div className="flex flex-wrap gap-4">
             {[
-              { key: 'popular', label: 'Popular' },
-              { key: 'top-rated', label: 'Top Rated' },
-              { key: 'upcoming', label: 'Upcoming' },
-              { key: 'now-playing', label: 'Now Playing' },
+              { key: 'popular', label: t('popular') },
+              { key: 'top-rated', label: t('topRated') },
+              { key: 'upcoming', label: t('upcoming') },
+              { key: 'now-playing', label: t('nowPlaying') },
             ].map((cat) => (
               <Link
                 key={cat.key}
@@ -115,13 +117,13 @@ const MoviesPage: React.FC = () => {
 
         {isLoading && !data && (
           <div className="flex items-center justify-center h-64">
-            <div className="text-xl">Loading movies...</div>
+            <div className="text-xl">{t('loading')}</div>
           </div>
         )}
 
         {error && (
           <div className="flex items-center justify-center h-64">
-            <div className="text-xl text-red-600">Error loading movies. Please try again.</div>
+            <div className="text-xl text-red-600">{t('error')}</div>
           </div>
         )}
 
@@ -141,7 +143,7 @@ const MoviesPage: React.FC = () => {
                   disabled={isFetchingNextPage}
                   className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
                 >
-                  {isFetchingNextPage ? 'Loading...' : 'Load More'}
+                  {isFetchingNextPage ? t('loading') : t('loadMore')}
                 </button>
               </div>
             )}

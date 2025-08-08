@@ -9,9 +9,11 @@ import {
 import MovieCard from '../../components/movie-card';
 import Header from '../../components/header';
 import { useScrollToTop } from '../../hooks/useScrollToTop';
+import { useTranslation } from '../../store/languageStore';
 
 const TVShowsPage: React.FC = () => {
   const { category = 'popular' } = useParams<{ category: string }>();
+  const { t, currentLanguage } = useTranslation();
   
   // Handle scroll restoration
   useScrollToTop();
@@ -35,7 +37,7 @@ const TVShowsPage: React.FC = () => {
     hasNextPage, 
     isFetchingNextPage 
   } = useInfiniteQuery({
-    queryKey: ['tv-shows', category],
+    queryKey: ['tv-shows', category, currentLanguage],
     queryFn: ({ pageParam = 1 }) => {
       const func = getTVShowsFunction();
       return category === 'trending' ? func() : func(pageParam);
@@ -57,11 +59,11 @@ const TVShowsPage: React.FC = () => {
   const getCategoryTitle = () => {
     switch (category) {
       case 'top-rated':
-        return 'Top Rated TV Shows';
+        return t('topRated') + ' ' + t('tvShows');
       case 'trending':
-        return 'Trending TV Shows';
+        return t('trendingTVShows');
       default:
-        return 'Popular TV Shows';
+        return t('popular') + ' ' + t('tvShows');
     }
   };
 
@@ -91,9 +93,9 @@ const TVShowsPage: React.FC = () => {
         <div className="mb-8">
           <div className="flex flex-wrap gap-4">
             {[
-              { key: 'popular', label: 'Popular' },
-              { key: 'top-rated', label: 'Top Rated' },
-              { key: 'trending', label: 'Trending' },
+              { key: 'popular', label: t('popular') },
+              { key: 'top-rated', label: t('topRated') },
+              { key: 'trending', label: t('trending') },
             ].map((cat) => (
               <Link
                 key={cat.key}

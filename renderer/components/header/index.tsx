@@ -2,9 +2,12 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
 import SearchBar from '../search-bar';
+import LanguageSelector from '../language-selector';
+import { useTranslation } from '../../store/languageStore';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleBack = () => {
     navigate(-1);
@@ -43,20 +46,23 @@ const Header: React.FC = () => {
               to="/movies" 
               className="hover:text-blue-400 transition-colors"
             >
-              Movies
+              {t('movies')}
             </Link>
             <Link 
               to="/tv-shows" 
               className="hover:text-blue-400 transition-colors"
             >
-              TV Shows
+              {t('tvShows')}
             </Link>
             <Link 
               to="/people" 
               className="hover:text-blue-400 transition-colors"
             >
-              People
+              {t('people')}
             </Link>
+            
+            {/* Language Selector */}
+            <LanguageSelector />
           </nav>
         </div>
       </div>

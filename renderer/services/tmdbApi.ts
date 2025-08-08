@@ -2,6 +2,7 @@
 // You'll need to get an API key from https://www.themoviedb.org/settings/api
 
 import { extractM3u8Link } from "../services/backgroundScraper";
+import { useLanguageStore } from "../store/languageStore";
 
 const TMDB_BASE_URL = 'http://172.233.155.175:5000/api/filmy/moviedb';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
@@ -175,9 +176,14 @@ export interface PersonCombinedCredits {
 }
 
 // API Helper function
-const apiRequest = async <T>(endpoint: string): Promise<T> => {
+const apiRequest = async <T>(endpoint: string, customLanguage?: string): Promise<T> => {
+  // Get current language from store
+  const languageStore = useLanguageStore.getState();
+  const language = customLanguage || languageStore.getTMDbLanguageCode();
+  const region = languageStore.getRegion();
+  
   const separator = endpoint.includes('?') ? '&' : '?';
-  const url = `${TMDB_BASE_URL}${endpoint}${separator}language=en-US`;
+  const url = `${TMDB_BASE_URL}${endpoint}${separator}language=${language}&region=${region}`;
   
   try {
     const response = await fetch(url, {
